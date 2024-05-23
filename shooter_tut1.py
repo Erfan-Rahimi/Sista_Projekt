@@ -820,19 +820,24 @@ exit_group = pygame.sprite.Group()
 
 #Creating our map as a list of lists. Simliar to that of an text based adventure game 
 world_data = []
+
 # This is our rows. We have 16 rows and for each row we create the specific values 
 #and everytime we do that we append that into our epmty world data list 
 for row in range(ROWS):
     r = [-1] * COLS 
     world_data.append(r)
-# load in level data 
+
+# load in level data from a cvs file, read cvs file and iterate over each row and column 
+# Convert the data into integer and assign it to the corresponding position.
 with open(f'level{level}_data.csv', newline='') as csvfile:
-    reader = csv.reader(csvfile, delimiter=',')
+    reader = csv.reader(csvfile, delimiter=',') 
     for x, row in enumerate(reader):
         for y, tile in enumerate(row): 
             world_data[x][y] = int(tile)
+
+# Create a world object and process the loaded map data 
 world = World()
-player, health_bar = world.process_data(world_data)
+player, health_bar = world.process_data(world_data) # Process the map data to create player and health bar 
 
 
 # We want the screen to be constently running and not close 
@@ -842,21 +847,23 @@ while run:
 
     clock.tick(FPS)
 
+    #draw menu while the game has not started
     if start_game == False:
-        #draw menu
         draw_menu()
-        #Add the buttons 
+        #Add the buttons and check for clicks 
         if start_button.draw(screen):
             start_game = True
         if exit_button.draw(screen):
-            run = False 
+            run = False # Exit the game 
         pass
     elif end:
         screen.fill(BG)
 
+        # Play the ending music if it is not already playing 
         if not pygame.mixer.music.get_busy():
             end_music.play()
 
+        # Stop the background music 
         pygame.mixer.music.stop()
         scaled_ending_img = pygame.transform.scale(ending_img, (SCREEN_WIDTH, SCREEN_HEIGHT + 200))
         end_rect = ending_img.get_rect()
@@ -874,8 +881,9 @@ while run:
                     for y, tile in enumerate(row):
                         world_data[x][y] = int(tile)
             world = World()
-            player, health_bar = world.process_data(world_data)
-                            # Stop ending music and reset background music
+            player, health_bar = world.process_data(world_data) # Reinitialize player and health bar
+            
+            # Stop ending music and reset background music
             end_music.stop()
             pygame.mixer.music.play(-1)
     else:
@@ -886,24 +894,21 @@ while run:
         world.draw()
         #show health bar 
         health_bar.draw(player.health) 
-        #Show ammo 
+        #Show the amount of ammo, rocket and grenades on screen 
         draw_text('AMMO:', font, WHITE, 10, 35)
         for x in range(player.ammo):
             screen.blit(bullet_img, (90 + (x * 10), 40))
-        #Show ammo 
         draw_text('GRENADES:', font, WHITE, 10, 70)
         for x in range(player.grenades):
             screen.blit(grenade_img, (150 + (x * 15), 70))
-        #show rockets 
         draw_text('ROCKETS:', font, WHITE, 10, 110)
         for x in range(player.rockets):
             screen.blit(rocket_img, (130 + (x * 50), 110))
         
 
     
-        #Call our draw method 
+        #Update our player and enemies 
         player.update()
-        # Call our draw method 
         player.draw()
 
         #Instead of just having one enemy, we iterate through the amount of enemies we have added
@@ -976,7 +981,8 @@ while run:
                 player.update_action(0)# 0: Idle
             screen_scroll, level_complete = player.move(moving_left, moving_right)
             bg_scroll -= screen_scroll
-            # Check i level is completed 
+            # Check if level is completed, if it reaches the end, then set the end varible to true 
+            # Meaning that the game has ended 
             if level_complete:
                 level+= 1
                 bg_scroll = 0 
@@ -995,14 +1001,15 @@ while run:
 
         
         else:
-
+            # The player is dead. We play the dying sound, stop music 
             if not dying_sound:
                 dying_fx.play()
                 dying_sound = True
-        
+            
             if not pygame.mixer.music.get_busy():
                 end_music.play()
                 
+            # Draw restart button and handle its click events 
             screen_scroll = 0 
             if restart_button.draw(screen):
                 bg_scroll = 0 
